@@ -1,0 +1,110 @@
+{
+  "Infogempa": {
+    "gempa": [
+      {
+        "Tanggal": "12 Nov 2026",
+        "Jam": "23:41:07 WIB",
+        "DateTime": "2026-11-12T23:41:07+07:00",
+        "Coordinates": "2.45,128.10",
+        "Lintang": "2.45 LU",
+        "Bujur": "128.10 BT",
+        "Magnitude": "5.8",
+        "Kedalaman": "34 km",
+        "Wilayah": "Pusat gempa berada di laut 48 km Tenggara Pulau Ternate",
+        "Potensi": "Tidak berpotensi tsunami",
+        "Shakemap": "20261112234107.mmi.jpg"
+      },
+      {
+        "Tanggal": "12 Nov 2026",
+        "Jam": "14:12:55 WIB",
+        "DateTime": "2026-11-12T14:12:55+07:00",
+        "Coordinates": "-8.72,117.33",
+        "Lintang": "8.72 LS",
+        "Bujur": "117.33 BT",
+        "Magnitude": "5.1",
+        "Kedalaman": "102 km",
+        "Wilayah": "Pusat gempa berada di laut 94 km Selatan Lombok",
+        "Potensi": "Tidak berpotensi tsunami",
+        "Shakemap": "20261112141255.mmi.jpg"
+      },
+      {
+        "Tanggal": "11 Nov 2026",
+        "Jam": "19:56:31 WIB",
+        "DateTime": "2026-11-11T19:56:31+07:00",
+        "Coordinates": "-2.91,140.62",
+        "Lintang": "2.91 LS",
+        "Bujur": "140.62 BT",
+        "Magnitude": "6.2",
+        "Kedalaman": "18 km",
+        "Wilayah": "Pusat gempa berada di darat 21 km BaratDaya Jayapura, Papua",
+        "Potensi": "Tidak berpotensi tsunami",
+        "Shakemap": "20261111195631.mmi.jpg"
+      },
+      {
+        "Tanggal": "10 Nov 2026",
+        "Jam": "08:23:14 WIB",
+        "DateTime": "2026-11-10T08:23:14+07:00",
+        "Coordinates": "-6.28,102.10",
+        "Lintang": "6.28 LS",
+        "Bujur": "102.10 BT",
+        "Magnitude": "5.4",
+        "Kedalaman": "55 km",
+        "Wilayah": "Pusat gempa berada di laut 164 km BaratDaya Lampung",
+        "Potensi": "Tidak berpotensi tsunami",
+        "Shakemap": "20261110082314.mmi.jpg"
+      },
+      {
+        "Tanggal": "09 Nov 2026",
+        "Jam": "21:47:02 WIB",
+        "DateTime": "2026-11-09T21:47:02+07:00",
+        "Coordinates": "0.65,127.92",
+        "Lintang": "0.65 LU",
+        "Bujur": "127.92 BT",
+        "Magnitude": "5.0",
+        "Kedalaman": "87 km",
+        "Wilayah": "Pusat gempa berada di laut 102 km Utara Pulau Morotai",
+        "Potensi": "Tidak berpotensi tsunami",
+        "Shakemap": "20261109214702.mmi.jpg"
+      },
+      {
+        "Tanggal": "08 Nov 2026",
+        "Jam": "05:09:44 WIB",
+        "DateTime": "2026-11-08T05:09:44+07:00",
+        "Coordinates": "-9.14,124.55",
+        "Lintang": "9.14 LS",
+        "Bujur": "124.55 BT",
+        "Magnitude": "5.3",
+        "Kedalaman": "12 km",
+        "Wilayah": "Pusat gempa berada di laut 148 km BaratDaya Pulau Rote",
+        "Potensi": "Tidak berpotensi tsunami",
+        "Shakemap": "20261108050944.mmi.jpg"
+      },
+      {
+        "Tanggal": "06 Nov 2026",
+        "Jam": "16:33:19 WIB",
+        "DateTime": "2026-11-06T16:33:19+07:00",
+        "Coordinates": "-3.44,100.98",
+        "Lintang": "3.44 LS",
+        "Bujur": "100.98 BT",
+        "Magnitude": "5.6",
+        "Kedalaman": "42 km",
+        "Wilayah": "Pusat gempa berada di laut 88 km Barat Muara Padang",
+        "Potensi": "Tidak berpotensi tsunami",
+        "Shakemap": "20261106163319.mmi.jpg"
+      },
+      {
+        "Tanggal": "05 Nov 2026",
+        "Jam": "11:58:36 WIB",
+        "DateTime": "2026-11-05T11:58:36+07:00",
+        "Coordinates": "1.22,126.35",
+        "Lintang": "1.22 LU",
+        "Bujur": "126.35 BT",
+        "Magnitude": "5.2",
+        "Kedalaman": "160 km",
+        "Wilayah": "Pusat gempa berada di laut 75 km BaratDaya Pulau Sangihe",
+        "Potensi": "Tidak berpotensi tsunami",
+        "Shakemap": "20261105115836.mmi.jpg"
+      }
+    ]
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "Infogempa": {
+    "gempa": [
+      {
+        "Tanggal": "12 Nov 2026",
+        "Jam": "23:41:07 WIB",
+        "DateTime": "2026-11-12T23:41:07+07:00",
+        "Coordinates": "2.45,128.10",
+        "Lintang": "2.45 LU",
+        "Bujur": "128.10 BT",
+        "Magnitude": "5.8",
+        "Kedalaman": "34 km",
+        "Wilayah": "Pusat gempa berada di laut 48 km Tenggara Pulau Ternate",
+        "Dirasakan": "[III-IV] Ternate, [II-III] Tidore",
+        "Skala": "III-IV",
+        "Shakemap": "20261112234107.mmi.jpg"
+      },
+      {
+        "Tanggal": "11 Nov 2026",
+        "Jam": "19:56:31 WIB",
+        "DateTime": "2026-11-11T19:56:31+07:00",
+        "Coordinates": "-2.91,140.62",
+        "Lintang": "2.91 LS",
+        "Bujur": "140.62 BT",
+        "Magnitude": "6.2",
+        "Kedalaman": "18 km",
+        "Wilayah": "Pusat gempa berada di darat 21 km BaratDaya Jayapura, Papua",
+        "Dirasakan": "[V] Jayapura, [IV] Sentani, [III] Skouw",
+        "Skala": "V",
+        "Shakemap": "20261111195631.mmi.jpg"
+      },
+      {
+        "Tanggal": "10 Nov 2026",
+        "Jam": "08:23:14 WIB",
+        "DateTime": "2026-11-10T08:23:14+07:00",
+        "Coordinates": "-6.28,102.10",
+        "Lintang": "6.28 LS",
+        "Bujur": "102.10 BT",
+        "Magnitude": "5.4",
+        "Kedalaman": "55 km",
+        "Wilayah": "Pusat gempa berada di laut 164 km BaratDaya Lampung",
+        "Dirasakan": "[II] Bandar Lampung, [II] Metro",
+        "Skala": "II",
+        "Shakemap": "20261110082314.mmi.jpg"
+      },
+      {
+        "Tanggal": "06 Nov 2026",
+        "Jam": "16:33:19 WIB",
+        "DateTime": "2026-11-06T16:33:19+07:00",
+        "Coordinates": "-3.44,100.98",
+        "Lintang": "3.44 LS",
+        "Bujur": "100.98 BT",
+        "Magnitude": "5.6",
+        "Kedalaman": "42 km",
+        "Wilayah": "Pusat gempa berada di laut 88 km Barat Muara Padang",
+        "Dirasakan": "[III] Padang, [II-III] Bukittinggi, [II] Pekanbaru",
+        "Skala": "III",
+        "Shakemap": "20261106163319.mmi.jpg"
+      }
+    ]
+  }
+}

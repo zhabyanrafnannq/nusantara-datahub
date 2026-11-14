@@ -1,0 +1,82 @@
+{
+  "results": [
+    {
+      "id": 1626381,
+      "name": "Kota Sukabumi",
+      "latitude": -6.91806,
+      "longitude": 106.92667,
+      "elevation": 613.0,
+      "feature_code": "PPL",
+      "country_code": "ID",
+      "admin1_id": 1642672,
+      "admin2_id": 1626379,
+      "timezone": "Asia/Jakarta",
+      "population": 365735,
+      "country_id": 1643084,
+      "country": "Indonesia",
+      "admin1": "Jawa Barat",
+      "admin2": "Kotamadya Sukabumi"
+    },
+    {
+      "id": 1632694,
+      "name": "Pangkalanbuun",
+      "latitude": -2.6832,
+      "longitude": 111.6259,
+      "elevation": 16.0,
+      "feature_code": "PPL",
+      "country_code": "ID",
+      "admin1_id": 1641898,
+      "admin2_id": 1639476,
+      "timezone": "Asia/Pontianak",
+      "population": 108814,
+      "country_id": 1643084,
+      "country": "Indonesia",
+      "admin1": "Provinsi Kalimantan Tengah",
+      "admin2": "Kabupaten Kotawaringin Barat"
+    },
+    {
+      "id": 1626383,
+      "name": "Sukabumi",
+      "latitude": -4.60768,
+      "longitude": 103.88857,
+      "elevation": 269.0,
+      "feature_code": "PPL",
+      "country_code": "ID",
+      "admin1_id": 1626196,
+      "admin2_id": 9165989,
+      "timezone": "Asia/Jakarta",
+      "country_id": 1643084,
+      "country": "Indonesia",
+      "admin1": "Sumatera Selatan",
+      "admin2": "Kabupaten Ogan Komering Ulu Selatan"
+    },
+    {
+      "id": 1903308,
+      "name": "Sukabumi",
+      "latitude": -7.746,
+      "longitude": 113.2121,
+      "elevation": 10.0,
+      "feature_code": "PPL",
+      "country_code": "ID",
+      "admin1_id": 1642668,
+      "admin2_id": 1630632,
+      "timezone": "Asia/Jakarta",
+      "country_id": 1643084,
+      "country": "Indonesia",
+      "admin1": "Jawa Timur",
+      "admin2": "Kabupaten Jember"
+    },
+    {
+      "id": 12116677,
+      "name": "Paris",
+      "latitude": 48.8566,
+      "longitude": 2.3522,
+      "feature_code": "PPLC",
+      "country_code": "FR",
+      "timezone": "Europe/Paris",
+      "population": 2138551,
+      "country": "France",
+      "admin1": "Île-de-France"
+    }
+  ]
+}

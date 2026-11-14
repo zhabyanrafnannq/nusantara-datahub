@@ -1,0 +1,15 @@
+# Konfigurasi deploy Netlify untuk Nusantara DataHub (Next.js 15)
+# Dokumentasi: https://docs.netlify.com/frameworks/next-js/overview/
+
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "22"
+  # Tidak ada environment variable wajib — semua modul berjalan keyless.
+
+# Runtime resmi Netlify untuk Next.js (API routes, SSR, ISR, i18n).
+# Netlify menginstal plugin ini otomatis saat deploy.
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
