@@ -25,7 +25,7 @@ export default function GlosariumPage() {
       <PageHeader
         accent="violet"
         icon={BookOpen}
-        title="Glosarium Statistik EN–ID"
+        title="Glosarium Statistik"
         description={`${GLOSSARY.length} istilah statistik: terjemahan, penjelasan bahasa awam, rumus, dan contoh.`}
       />
 
