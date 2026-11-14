@@ -34,8 +34,8 @@ export default async function GempaPage() {
 
       {latest ? (
         <Card className="overflow-hidden">
-          <div className="grid gap-0 lg:grid-cols-[1.4fr_1fr]">
-            <div className="space-y-4 p-6">
+          <div className="flex flex-col lg:flex-row">
+            <div className="flex-1 space-y-4 p-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="grid h-10 w-10 place-items-center rounded-xl bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400">
@@ -73,12 +73,7 @@ export default async function GempaPage() {
                 </div>
               </dl>
             </div>
-            <div className="border-t border-zinc-100 p-4 lg:border-l lg:border-t-0 dark:border-zinc-800">
-              <ShakemapImage src={latest.shakemap} alt={`Peta guncangan gempa M${latest.magnitude}`} />
-              <p className="mt-2 text-center text-[11px] text-zinc-400 dark:text-zinc-500">
-                Peta intensitas guncangan (shakemap) © BMKG
-              </p>
-            </div>
+            <ShakemapImage src={latest.shakemap} alt={`Peta guncangan gempa M${latest.magnitude}`} />
           </div>
         </Card>
       ) : null}
