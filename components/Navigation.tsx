@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
 import { Activity, BookOpen, CloudSun, Database, ExternalLink, Moon, Sun, Waves } from "lucide-react";
 import { useEffect, useState } from "react";
+import { LogoMark } from "@/components/Logo";
 
 const NAV_ITEMS = [
   { href: "/", label: "Ringkasan", icon: Activity, accent: "emerald" },
@@ -70,9 +71,7 @@ export function Sidebar() {
   return (
     <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-zinc-200/70 bg-white/70 px-4 py-5 backdrop-blur-xl md:flex dark:border-zinc-800/70 dark:bg-zinc-950/70">
       <Link href="/" className="mb-7 flex items-center gap-2.5 px-2">
-        <span className="grid h-9 w-9 place-items-center rounded-2xl bg-gradient-to-br from-emerald-500 via-teal-600 to-sky-600 text-sm font-bold text-white shadow-md">
-          ND
-        </span>
+        <LogoMark size={40} />
         <span>
           <span className="block text-sm font-bold leading-tight tracking-tight text-zinc-900 dark:text-white">Nusantara DataHub</span>
           <span className="block text-[11px] text-zinc-500 dark:text-zinc-400">Dashboard Data Publik</span>
@@ -102,9 +101,7 @@ export function Topbar() {
     <header className="sticky top-0 z-30 border-b border-zinc-200/70 bg-white/70 backdrop-blur-xl dark:border-zinc-800/70 dark:bg-zinc-950/70">
       <div className="flex items-center justify-between px-4 py-2.5 md:hidden">
         <Link href="/" className="flex items-center gap-2">
-          <span className="grid h-7 w-7 place-items-center rounded-xl bg-gradient-to-br from-emerald-500 via-teal-600 to-sky-600 text-[11px] font-bold text-white">
-            ND
-          </span>
+          <LogoMark size={28} />
           <span className="text-sm font-bold tracking-tight text-zinc-900 dark:text-white">Nusantara DataHub</span>
         </Link>
         <ThemeToggle />
