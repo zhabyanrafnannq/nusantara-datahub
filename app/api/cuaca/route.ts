@@ -7,25 +7,26 @@ export async function GET(request: NextRequest) {
   const lon = Number.parseFloat(params.get("lon") ?? "");
   const name = params.get("name")?.trim() || "Lokasi tanpa nama";
 
+  let response;
   // Mode 1: koordinat eksplisit dari hasil geocoder (seluruh kabupaten/kota).
   if (Number.isFinite(lat) && Number.isFinite(lon)) {
     const admin1 = params.get("admin1")?.trim() || undefined;
-    const response = await getWeatherAt({ name, admin1, latitude: lat, longitude: lon });
-    return NextResponse.json(response, {
-      headers: { "Cache-Control": "public, s-maxage=1800, stale-while-revalidate=3600" },
-    });
+    response = await getWeatherAt({ name, admin1, latitude: lat, longitude: lon });
+  } else {
+    // Mode 2: kota favorit dari daftar bawaan.
+    const cityId = params.get("city") ?? "jakarta";
+    const fallback = await getWeather(cityId);
+    if (!fallback) {
+      return NextResponse.json(
+        { error: `Kota '${cityId}' tidak dikenal. Gunakan parameter lat/lon dari /api/geocoding.` },
+        { status: 400 },
+      );
+    }
+    response = fallback;
   }
 
-  // Mode 2: kota favorit dari daftar bawaan.
-  const cityId = params.get("city") ?? "jakarta";
-  const response = await getWeather(cityId);
-  if (!response) {
-    return NextResponse.json(
-      { error: `Kota '${cityId}' tidak dikenal. Gunakan parameter lat/lon dari /api/geocoding.` },
-      { status: 400 },
-    );
-  }
-  return NextResponse.json(response, {
-    headers: { "Cache-Control": "public, s-maxage=1800, stale-while-revalidate=3600" },
-  });
+  // Fallback fixture tidak di-cache agar percobaan berikutnya menyentuh upstream lagi.
+  const cacheControl =
+    response.source === "live" ? "public, s-maxage=1800, stale-while-revalidate=3600" : "no-store";
+  return NextResponse.json(response, { headers: { "Cache-Control": cacheControl } });
 }

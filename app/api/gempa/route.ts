@@ -7,7 +7,8 @@ export async function GET(request: NextRequest) {
   const requested = request.nextUrl.searchParams.get("type") ?? "terkini";
   const type = VALID_TYPES.includes(requested as QuakeFeedType) ? (requested as QuakeFeedType) : "terkini";
   const response = await getQuakes(type);
-  return NextResponse.json(response, {
-    headers: { "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600" },
-  });
+  // Fallback fixture tidak di-cache agar percobaan berikutnya menyentuh upstream lagi.
+  const cacheControl =
+    response.source === "live" ? "public, s-maxage=300, stale-while-revalidate=600" : "no-store";
+  return NextResponse.json(response, { headers: { "Cache-Control": cacheControl } });
 }

@@ -128,23 +128,32 @@ export async function getWeather(cityId = "jakarta"): Promise<ApiResponse<Weathe
 export async function searchPlaces(query: string): Promise<ApiResponse<GeoPlace[]>> {
   const url = buildGeocodeUrl(query);
   const fetchedAt = new Date().toISOString();
-  try {
-    const response = await fetch(url, {
-      headers: { "User-Agent": "NusantaraDataHub/0.1 (open-source dashboard)" },
-      signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
-      next: { revalidate: 86400 },
-    });
-    if (!response.ok) {
-      throw new Error(`Geocoder membalas HTTP ${response.status}`);
+
+  // Dua percobaan — geocoder kadang lambat/terputus sesaat.
+  let lastError: unknown = new Error("geocoder gagal");
+  for (let attempt = 1; attempt <= 2; attempt += 1) {
+    try {
+      const response = await fetch(url, {
+        headers: { "User-Agent": "NusantaraDataHub/0.1 (open-source dashboard)" },
+        signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
+        next: { revalidate: 3600 },
+      });
+      if (!response.ok) {
+        throw new Error(`Geocoder membalas HTTP ${response.status}`);
+      }
+      const payload = (await response.json()) as unknown;
+      return { source: "live", fetchedAt, data: normalizeGeocode(payload) };
+    } catch (error) {
+      lastError = error;
     }
-    const payload = (await response.json()) as unknown;
-    return { source: "live", fetchedAt, data: normalizeGeocode(payload) };
-  } catch (error) {
-    const reason = error instanceof Error ? error.message : "alasan tidak diketahui";
-    console.warn(`[sources] fallback ke fixture geocoding untuk "${query}": ${reason}`);
-    const fixture = await import("./fixtures/geocode.json");
-    return { source: "fixture", fetchedAt, data: normalizeGeocode(fixture.default) };
   }
+
+  // PENTING: kegagalan geocoding TIDAK memakai fixture — mengembalikan hasil
+  // palsu (mis. daftar Sukabumi untuk kueri "demak") lebih berbahaya daripada
+  // hasil kosong. UI sudah menampilkan pesan "tidak ada tempat cocok".
+  const reason = lastError instanceof Error ? lastError.message : "alasan tidak diketahui";
+  console.warn(`[sources] geocoder gagal untuk "${query}", kembalikan kosong: ${reason}`);
+  return { source: "fixture", fetchedAt, data: [] };
 }
 
 /* ---------------------------- Analitik gempa -------------------------------- */

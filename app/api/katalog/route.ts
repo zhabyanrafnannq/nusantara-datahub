@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
     q: params.get("q")?.trim() || "",
     page,
   });
-  return NextResponse.json(response, {
-    headers: { "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600" },
-  });
+  const cacheControl =
+    response.source === "live" ? "public, s-maxage=300, stale-while-revalidate=600" : "no-store";
+  return NextResponse.json(response, { headers: { "Cache-Control": cacheControl } });
 }
