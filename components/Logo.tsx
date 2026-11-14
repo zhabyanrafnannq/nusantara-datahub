@@ -1,9 +1,13 @@
+import { useId } from "react";
+import { INDONESIA_MAP_PATH } from "@/lib/indonesia-map";
+
 /**
- * Logo mark Nusantara DataHub — v2.
+ * Logo mark Nusantara DataHub — v4.
  *
- * Satu ide, tegas: pias gradien biru→hijau dengan siluet kepulauan
- * Nusantara putih yang gempal. Dirancang agar terbaca jelas pada ukuran
- * kecil (favicon, 28–40px) — tanpa detail yang berubah jadi noise.
+ * Dua ide eksplisit: siluet kepulauan Indonesia ASLI (data Natural Earth
+ * 110m, domain publik — bukan gambar tangan) di paruh bawah, dan bar
+ * chart statistik yang menanjak di atasnya. Komposisi: "statistik tumbuh
+ * dari kepulauan". Putih di atas pias gradien biru→hijau.
  */
 
 export function LogoMark({
@@ -15,6 +19,9 @@ export function LogoMark({
   className?: string;
   title?: string;
 }) {
+  // id unik per instance — sidebar & topbar dirender bersamaan di dokumen yang sama.
+  const clipId = useId().replace(/[:]/g, "");
+
   return (
     <svg
       width={size}
@@ -26,51 +33,29 @@ export function LogoMark({
       className={className}
     >
       <defs>
-        <linearGradient id="ndDisc" x1="0" y1="0" x2="120" y2="120" gradientUnits="userSpaceOnUse">
+        <linearGradient id={`ndDisc-${clipId}`} x1="0" y1="0" x2="120" y2="120" gradientUnits="userSpaceOnUse">
           <stop offset="0" stopColor="#2563EB" />
           <stop offset="0.5" stopColor="#0EA5E9" />
           <stop offset="1" stopColor="#22C55E" />
         </linearGradient>
+        <clipPath id={`ndClip-${clipId}`}>
+          <circle cx="60" cy="60" r="56" />
+        </clipPath>
       </defs>
 
       {/* Pias gradien */}
-      <circle cx="60" cy="60" r="56" fill="url(#ndDisc)" />
+      <circle cx="60" cy="60" r="56" fill={`url(#ndDisc-${clipId})`} />
 
-      {/* Orbit halus — gema dari konsep cincin, tanpa berisik */}
-      <circle
-        cx="60"
-        cy="60"
-        r="50"
-        stroke="#FFFFFF"
-        strokeOpacity={0.3}
-        strokeWidth={2.5}
-        strokeDasharray="230 84.2"
-        strokeLinecap="round"
-        transform="rotate(118 60 60)"
-        fill="none"
-      />
+      <g fill="#FFFFFF">
+        {/* Bar chart statistik (paruh atas, menanjak) */}
+        <rect x="58" y="30" width="8" height="16" rx="4" />
+        <rect x="70.5" y="22" width="8" height="24" rx="4" />
+        <rect x="83" y="14" width="8" height="32" rx="4" />
 
-      {/* Kepulauan Nusantara putih — gempal & langsung terbaca */}
-      <g fill="#FFFFFF" stroke="#FFFFFF">
-        {/* Sumatera */}
-        <path d="M30 40 L44 55" strokeWidth={7.5} strokeLinecap="round" fill="none" />
-        {/* Jawa */}
-        <path d="M41 65 L62 65.5" strokeWidth={4.8} strokeLinecap="round" fill="none" />
-        {/* Kalimantan */}
-        <ellipse cx="56.5" cy="44" rx="8.2" ry="6.8" transform="rotate(-10 56.5 44)" stroke="none" />
-        {/* Sulawesi (badan + dua lengan khas) */}
-        <path d="M71.5 39.5 L73 51" strokeWidth={4.2} strokeLinecap="round" fill="none" />
-        <path d="M72 44.5 L78.5 47.5" strokeWidth={3.4} strokeLinecap="round" fill="none" />
-        <path d="M72.6 49 L78 53.5" strokeWidth={3.2} strokeLinecap="round" fill="none" />
-        {/* Papua */}
-        <ellipse cx="83.5" cy="58.5" rx="7" ry="5.6" transform="rotate(12 83.5 58.5)" stroke="none" />
-        <path d="M87.5 53.5 L93 55.5" strokeWidth={3.8} strokeLinecap="round" fill="none" />
-        {/* Kepulauan kecil: Bangka, Nusa Tenggara, Maluku */}
-        <circle cx="47" cy="57" r="1.9" stroke="none" />
-        <circle cx="67.5" cy="70" r="2.1" stroke="none" />
-        <circle cx="73.5" cy="72.5" r="2.3" stroke="none" />
-        <circle cx="79.5" cy="70.5" r="2" stroke="none" />
-        <circle cx="79.5" cy="54" r="1.9" stroke="none" />
+        {/* Siluet kepulauan Indonesia asli (Natural Earth, dipotong ke pias) */}
+        <g clipPath={`url(#ndClip-${clipId})`}>
+          <path d={INDONESIA_MAP_PATH} />
+        </g>
       </g>
     </svg>
   );
