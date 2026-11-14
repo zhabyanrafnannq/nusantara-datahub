@@ -1,13 +1,12 @@
 import { useId } from "react";
-import { INDONESIA_MAP_PATH } from "@/lib/indonesia-map";
 
 /**
- * Logo mark Nusantara DataHub — v4.
+ * Logo mark Nusantara DataHub — v6 (gaya emblem emas–navy).
  *
- * Dua ide eksplisit: siluet kepulauan Indonesia ASLI (data Natural Earth
- * 110m, domain publik — bukan gambar tangan) di paruh bawah, dan bar
- * chart statistik yang menanjak di atasnya. Komposisi: "statistik tumbuh
- * dari kepulauan". Putih di atas pias gradien biru→hijau.
+ * Terinspirasi rancangan PNG pemilik: badge bulat navy pekat, cincin emas
+ * ganda, bar chart menanjak seperti puncak gunung dengan panah pertumbuhan.
+ * Disederhanakan menjadi vektor flat agar tetap tajam di favicon & sidebar
+ * (detail ornamen PNG AI tidak bisa bertahan di ukuran kecil).
  */
 
 export function LogoMark({
@@ -19,7 +18,6 @@ export function LogoMark({
   className?: string;
   title?: string;
 }) {
-  // id unik per instance — sidebar & topbar dirender bersamaan di dokumen yang sama.
   const clipId = useId().replace(/[:]/g, "");
 
   return (
@@ -33,34 +31,48 @@ export function LogoMark({
       className={className}
     >
       <defs>
-        <linearGradient id={`ndDisc-${clipId}`} x1="0" y1="0" x2="120" y2="120" gradientUnits="userSpaceOnUse">
-          <stop offset="0" stopColor="#2563EB" />
-          <stop offset="0.5" stopColor="#0EA5E9" />
-          <stop offset="1" stopColor="#22C55E" />
+        <linearGradient id={`ndGold-${clipId}`} x1="0" y1="120" x2="120" y2="0" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stopColor="#B98A22" />
+          <stop offset="0.5" stopColor="#E3B341" />
+          <stop offset="1" stopColor="#F7DB7D" />
         </linearGradient>
         <clipPath id={`ndClip-${clipId}`}>
           <circle cx="60" cy="60" r="56" />
         </clipPath>
       </defs>
 
-      {/* Pias gradien */}
-      <circle cx="60" cy="60" r="56" fill={`url(#ndDisc-${clipId})`} />
+      {/* Disc navy pekat */}
+      <circle cx="60" cy="60" r="56" fill="#132A56" />
 
-      <g fill="#FFFFFF">
-        {/*
-          Bar chart yang TUMBUH DARI BALIK kepulauan: dasar bar (y=62)
-          ditanam di belakang siluet pulau — peta digambar setelahnya
-          sehingga bars tampak keluar dari daratan, satu kesatuan.
-        */}
-        <rect x="52" y="42" width="8" height="20" rx="4" />
-        <rect x="64" y="32" width="8" height="30" rx="4" />
-        <rect x="76" y="22" width="8" height="40" rx="4" />
-        <rect x="86" y="16" width="8" height="46" rx="4" />
+      {/* Cincin emas ganda */}
+      <circle cx="60" cy="60" r="51.5" stroke={`url(#ndGold-${clipId})`} strokeWidth={3} />
+      <circle cx="60" cy="60" r="45.5" stroke="#E3B341" strokeWidth={1} opacity={0.7} />
 
-        {/* Siluet kepulauan Indonesia asli (Natural Earth, dipotong ke pias) */}
-        <g clipPath={`url(#ndClip-${clipId})`}>
-          <path d={INDONESIA_MAP_PATH} />
-        </g>
+      {/* Bar chart menanjak — emas, seperti puncak gunung */}
+      <g fill={`url(#ndGold-${clipId})`}>
+        <rect x="35.5" y="60" width="7" height="18" rx="3.5" />
+        <rect x="46" y="52" width="7" height="26" rx="3.5" />
+        <rect x="56.5" y="44" width="7" height="34" rx="3.5" />
+        <rect x="67" y="36" width="7" height="42" rx="3.5" />
+        <rect x="77.5" y="28" width="7" height="50" rx="3.5" />
+      </g>
+
+      {/* Panah pertumbuhan di atas bar tertinggi */}
+      <path
+        d="M74 25.5 L81 17.5 L88 25.5"
+        stroke={`url(#ndGold-${clipId})`}
+        strokeWidth={3.5}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+
+      {/* Aksen bintik kepulauan di kaki badge (gema peta dari referensi) */}
+      <g fill="#E3B341" opacity={0.85}>
+        <circle cx="42" cy="84" r="1.6" />
+        <circle cx="49" cy="86.5" r="1.9" />
+        <circle cx="57" cy="88" r="2.1" />
+        <circle cx="65" cy="87.5" r="1.9" />
+        <circle cx="72" cy="85" r="1.6" />
       </g>
     </svg>
   );
