@@ -47,10 +47,15 @@ export function LogoMark({
       <circle cx="60" cy="60" r="56" fill={`url(#ndDisc-${clipId})`} />
 
       <g fill="#FFFFFF">
-        {/* Bar chart statistik (paruh atas, menanjak) */}
-        <rect x="58" y="30" width="8" height="16" rx="4" />
-        <rect x="70.5" y="22" width="8" height="24" rx="4" />
-        <rect x="83" y="14" width="8" height="32" rx="4" />
+        {/*
+          Bar chart yang TUMBUH DARI BALIK kepulauan: dasar bar (y=62)
+          ditanam di belakang siluet pulau — peta digambar setelahnya
+          sehingga bars tampak keluar dari daratan, satu kesatuan.
+        */}
+        <rect x="52" y="42" width="8" height="20" rx="4" />
+        <rect x="64" y="32" width="8" height="30" rx="4" />
+        <rect x="76" y="22" width="8" height="40" rx="4" />
+        <rect x="86" y="16" width="8" height="46" rx="4" />
 
         {/* Siluet kepulauan Indonesia asli (Natural Earth, dipotong ke pias) */}
         <g clipPath={`url(#ndClip-${clipId})`}>
