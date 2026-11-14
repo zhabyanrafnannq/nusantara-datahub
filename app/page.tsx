@@ -20,7 +20,6 @@ export default async function OverviewPage() {
         <div className="pointer-events-none absolute -right-16 -top-24 h-72 w-72 rounded-full bg-sky-400/25 blur-3xl" aria-hidden />
         <div className="pointer-events-none absolute -bottom-28 left-1/3 h-64 w-64 rounded-full bg-teal-300/20 blur-3xl" aria-hidden />
         <div className="relative">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-200">Open Source · MIT License</p>
           <h1 className="mt-2 text-2xl font-extrabold tracking-tight md:text-3xl">Nusantara DataHub</h1>
           <p className="mt-2 max-w-2xl text-sm leading-relaxed text-emerald-50/90">
             Dashboard terpadu data publik Indonesia — gabungkan gempa bumi realtime dari BMKG,
