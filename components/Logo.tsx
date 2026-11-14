@@ -1,12 +1,9 @@
 /**
- * Logo mark Nusantara DataHub — vektor tangan, bukan aset AI.
+ * Logo mark Nusantara DataHub — v2.
  *
- * Konsep (disarikan dari rancangan PNG pemilik):
- *   cincin orbit gradien biru→hijau dengan celah dinamis,
- *   siluet kepulauan Nusantara (navy), konstelasi node jaringan,
- *   dua gelembung aksen (grafik & iklim) — flat, 2 hue + navy.
- *
- * Tema: elemen navy otomatis menjadi terang di dark mode lewat class.
+ * Satu ide, tegas: pias gradien biru→hijau dengan siluet kepulauan
+ * Nusantara putih yang gempal. Dirancang agar terbaca jelas pada ukuran
+ * kecil (favicon, 28–40px) — tanpa detail yang berubah jadi noise.
  */
 
 export function LogoMark({
@@ -29,90 +26,58 @@ export function LogoMark({
       className={className}
     >
       <defs>
-        <linearGradient id="ndRing" x1="0" y1="0" x2="120" y2="120" gradientUnits="userSpaceOnUse">
+        <linearGradient id="ndDisc" x1="0" y1="0" x2="120" y2="120" gradientUnits="userSpaceOnUse">
           <stop offset="0" stopColor="#2563EB" />
-          <stop offset="0.55" stopColor="#0EA5E9" />
+          <stop offset="0.5" stopColor="#0EA5E9" />
           <stop offset="1" stopColor="#22C55E" />
         </linearGradient>
       </defs>
 
-      {/* Konstelasi jaringan (di belakang) */}
-      <g className="stroke-[#1D4E89] dark:stroke-sky-100" opacity={0.35} strokeWidth={1.3}>
-        <path d="M30 26 L52 38 L62 54" />
-        <path d="M62 54 L92 30" />
-        <path d="M62 54 L92 74" />
-        <path d="M62 54 L32 86" />
-      </g>
-      <g className="fill-[#1D4E89] dark:fill-sky-100" opacity={0.45}>
-        <circle cx="30" cy="26" r="2.4" />
-        <circle cx="52" cy="38" r="1.7" />
-        <circle cx="92" cy="74" r="2.2" />
-        <circle cx="32" cy="86" r="2" />
-      </g>
+      {/* Pias gradien */}
+      <circle cx="60" cy="60" r="56" fill="url(#ndDisc)" />
 
-      {/* Cincin orbit: busur utama + aksen kecil di celah */}
-      <path
-        d="M 16.7 85 A 50 50 0 1 1 47.1 108.3"
-        stroke="url(#ndRing)"
-        strokeWidth={6}
+      {/* Orbit halus — gema dari konsep cincin, tanpa berisik */}
+      <circle
+        cx="60"
+        cy="60"
+        r="50"
+        stroke="#FFFFFF"
+        strokeOpacity={0.3}
+        strokeWidth={2.5}
+        strokeDasharray="230 84.2"
         strokeLinecap="round"
-      />
-      <path
-        d="M 39.3 98.9 A 44 44 0 0 0 23.5 84.6"
-        stroke="url(#ndRing)"
-        strokeWidth={5}
-        strokeLinecap="round"
-        opacity={0.45}
+        transform="rotate(118 60 60)"
+        fill="none"
       />
 
-      {/* Siluet kepulauan Nusantara (gaya sederhana, bukan kartografi) */}
-      <g className="fill-[#1D4E89] dark:fill-sky-100/95">
+      {/* Kepulauan Nusantara putih — gempal & langsung terbaca */}
+      <g fill="#FFFFFF" stroke="#FFFFFF">
         {/* Sumatera */}
-        <path d="M24 34 C30 30 36 36 40 44 C43 50 46 54 44 56 C41 58 35 54 31 48 C27 42 22 38 24 34 Z" />
+        <path d="M30 40 L44 55" strokeWidth={7.5} strokeLinecap="round" fill="none" />
         {/* Jawa */}
-        <path d="M38 63 C44 61 52 62 58 63 C63 64 68 65 72 66 L70 69 C64 68 56 68 48 67 C44 66.5 40 66 38 63 Z" />
+        <path d="M41 65 L62 65.5" strokeWidth={4.8} strokeLinecap="round" fill="none" />
         {/* Kalimantan */}
-        <path d="M50 30 C55 26 62 27 66 32 C69 36 69 42 65 46 C61 50 55 50 51 46 C47 42 46 34 50 30 Z" />
-        {/* Sulawesi (badan + lengan) */}
-        <path d="M76 34 C79 33 81 36 80 40 C79 44 78 47 79 50 L76 52 C74 49 74 45 75 41 C76 37 74 36 76 34 Z" />
-        <path d="M82 38 C85 37 88 39 89 42 L86 44 C85 41 83 40 82 38 Z" />
-        {/* Papua + kepala */}
-        <path d="M92 52 C96 50 101 52 103 56 C105 60 103 64 98 65 C94 66 90 63 90 59 C90 55 90 53 92 52 Z" />
-        <path d="M97 47 C100 46 103 48 104 51 L100 52 C99 50 98 48 97 47 Z" />
-        {/* Kepulauan kecil: Nusa Tenggara, Maluku, Bangka */}
-        <circle cx="74" cy="72" r="1.6" />
-        <circle cx="79" cy="74" r="1.8" />
-        <circle cx="84" cy="73" r="1.5" />
-        <circle cx="88" cy="76" r="1.6" />
-        <circle cx="84" cy="52" r="1.4" />
-        <circle cx="86" cy="58" r="1.6" />
-        <circle cx="83" cy="62" r="1.2" />
-        <circle cx="40" cy="52" r="1.4" />
-        <circle cx="44" cy="50" r="1.2" />
-      </g>
-
-      {/* Gelembung aksen: iklim */}
-      <g>
-        <circle cx="33" cy="24" r="9.5" className="fill-white dark:fill-zinc-900" stroke="url(#ndRing)" strokeWidth={2.5} />
-        <path
-          className="fill-[#2563EB] dark:fill-sky-400"
-          d="M28.5 27.5 c -1.8 0 -3.3 -1.4 -3.3 -3.1 c 0 -1.6 1.2 -2.9 2.8 -3.1 c 0.5 -1.9 2.2 -3.3 4.3 -3.3 c 2.3 0 4.2 1.8 4.4 4.1 c 1.6 0.2 2.8 1.5 2.8 3.2 c 0 1.7 -1.4 2.2 -3.1 2.2 z"
-        />
-      </g>
-
-      {/* Gelembung aksen: grafik data */}
-      <g>
-        <circle cx="92" cy="28" r="10" className="fill-white dark:fill-zinc-900" stroke="url(#ndRing)" strokeWidth={2.5} />
-        <rect x="87.6" y="27" width="2.6" height="6" rx="1" className="fill-[#2563EB] dark:fill-sky-400" />
-        <rect x="91.2" y="24.5" width="2.6" height="8.5" rx="1" className="fill-[#0EA5E9] dark:fill-sky-400" />
-        <rect x="94.8" y="22" width="2.6" height="11" rx="1" className="fill-[#22C55E]" />
+        <ellipse cx="56.5" cy="44" rx="8.2" ry="6.8" transform="rotate(-10 56.5 44)" stroke="none" />
+        {/* Sulawesi (badan + dua lengan khas) */}
+        <path d="M71.5 39.5 L73 51" strokeWidth={4.2} strokeLinecap="round" fill="none" />
+        <path d="M72 44.5 L78.5 47.5" strokeWidth={3.4} strokeLinecap="round" fill="none" />
+        <path d="M72.6 49 L78 53.5" strokeWidth={3.2} strokeLinecap="round" fill="none" />
+        {/* Papua */}
+        <ellipse cx="83.5" cy="58.5" rx="7" ry="5.6" transform="rotate(12 83.5 58.5)" stroke="none" />
+        <path d="M87.5 53.5 L93 55.5" strokeWidth={3.8} strokeLinecap="round" fill="none" />
+        {/* Kepulauan kecil: Bangka, Nusa Tenggara, Maluku */}
+        <circle cx="47" cy="57" r="1.9" stroke="none" />
+        <circle cx="67.5" cy="70" r="2.1" stroke="none" />
+        <circle cx="73.5" cy="72.5" r="2.3" stroke="none" />
+        <circle cx="79.5" cy="70.5" r="2" stroke="none" />
+        <circle cx="79.5" cy="54" r="1.9" stroke="none" />
       </g>
     </svg>
   );
 }
 
 /**
- * Lockup horizontal untuk pemakaian lebar (footer/halaman): mark + dua baris teks.
+ * Lockup horizontal untuk pemakaian lebar (footer/halaman): mark + teks bertumpuk.
  * Warna teks mengikuti tema lewat class di elemen pemanggil.
  */
 export function LogoLockup({ size = 44 }: { size?: number }) {
