@@ -47,4 +47,4 @@ npm run dev    # http://localhost:3000
 
 ---
 
-Aplikasi ini **bukan** produk resmi BMKG, Satu Data Indonesia, USGS, atau Open-Meteo. Data tetap tunduk pada ketentuan lembaga penerbit. Kode open source (MIT) — lihat repositori utama untuk dokumentasi lengkap.
+Aplikasi ini **bukan** produk resmi BMKG, Satu Data Indonesia, USGS, atau Open-Meteo. Data tetap tunduk pada ketentuan lembaga penerbit. 
