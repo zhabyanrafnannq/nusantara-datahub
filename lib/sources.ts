@@ -1,6 +1,8 @@
 import type {
   ApiResponse,
+  CatalogFilters,
   CatalogResult,
+  DatasetDetail,
   GeoPlace,
   Quake,
   QuakeAnalytics,
@@ -8,7 +10,8 @@ import type {
   WeatherForecast,
 } from "./types";
 import { normalizeBmkgEnvelope } from "./bmkg";
-import { buildSdiSearchUrl, fetchSdiHtml, parseSdiSearchHtml } from "./ckan";
+import { loadSdiDataset, loadSdiSearch, parseSdiSearchHtml } from "./ckan";
+import { cached } from "./cache";
 import { buildForecastUrl, buildGeocodeUrl, findCity, normalizeGeocode, normalizeOpenMeteo } from "./weather";
 import { buildUsgsUrl, computeQuakeAnalytics, parseUsgsCsv } from "./usgs";
 
@@ -16,6 +19,18 @@ import { buildUsgsUrl, computeQuakeAnalytics, parseUsgsCsv } from "./usgs";
 const UPSTREAM_TIMEOUT_MS = 8_000;
 /** Durasi cache respons upstream (revalidate Next.js). */
 export const REVALIDATE_SECONDS = 300;
+
+/**
+ * Interval penyegaran per sumber: gempa berubah cepat (2 menit), cuaca per jam,
+ * katalog & katalog gempa USGS lebih jarang. Nilai ini diterapkan di lapisan
+ * data (`cached`), jadi tetap berlaku walau halaman memakai ISR yang lebih longgar.
+ */
+export const SOURCE_TTL_SECONDS = {
+  bmkg: 120,
+  openmeteo: 1800,
+  satudata: 300,
+  usgs: 3600,
+} as const;
 
 export const BMKG_BASE_URL = "https://data.bmkg.go.id/DataMKG/TEWS";
 
@@ -56,7 +71,9 @@ export async function getQuakes(type: QuakeFeedType = "terkini"): Promise<ApiRes
   const file =
     type === "dirasakan" ? "gempa-dirasakan.json" : "gempa-terkini.json";
   const endpoint = type === "autogempa" ? "autogempa.json" : type === "dirasakan" ? "gempadirasakan.json" : "gempaterkini.json";
-  return fetchUpstreamOrFixture(`${BMKG_BASE_URL}/${endpoint}`, file, normalizeBmkgEnvelope);
+  return cached(`bmkg:${type}`, SOURCE_TTL_SECONDS.bmkg * 1000, () =>
+    fetchUpstreamOrFixture(`${BMKG_BASE_URL}/${endpoint}`, file, normalizeBmkgEnvelope),
+  );
 }
 
 /* ------------------------------- Katalog ---------------------------------- */
@@ -72,18 +89,27 @@ export const SDI_PAGE_SIZE = 20;
 export async function searchCatalog(params: {
   q: string;
   page: number;
+  filters?: CatalogFilters;
 }): Promise<ApiResponse<CatalogResult>> {
-  const url = buildSdiSearchUrl(params.q, params.page);
   const fetchedAt = new Date().toISOString();
+  const label = `"${params.q}" halaman ${params.page}`;
   try {
-    const html = await fetchSdiHtml(url);
-    return { source: "live", fetchedAt, data: parseSdiSearchHtml(html) };
+    const { result, attempts, complete } = await loadSdiSearch(params.q, params.page, params.filters ?? {});
+    if (!complete) {
+      console.warn(`[sources] katalog ${label}: portal hanya mengirim halaman tanpa payload (${attempts} percobaan)`);
+    }
+    return { source: "live", fetchedAt, data: result };
   } catch (error) {
     const reason = error instanceof Error ? error.message : "alasan tidak diketahui";
-    console.warn(`[sources] fallback ke fixture untuk ${url}: ${reason}`);
+    console.warn(`[sources] fallback ke fixture katalog untuk ${label}: ${reason}`);
     const fixture = await import("./fixtures/katalog-html");
     return { source: "fixture", fetchedAt, data: parseSdiSearchHtml(fixture.katalogFixtureHtml) };
   }
+}
+
+/** Detail satu dataset (halaman /katalog/[slug]); null bila tidak ditemukan. */
+export async function getDatasetDetail(slug: string): Promise<DatasetDetail | null> {
+  return loadSdiDataset(slug);
 }
 
 /* --------------------------------- Cuaca ----------------------------------- */
@@ -93,6 +119,12 @@ const WEATHER_REVALIDATE_SECONDS = 1800;
 
 /** Prakiraan cuaca untuk koordinat mana pun di Indonesia (hasil geocoder). */
 export async function getWeatherAt(place: { name: string; admin1?: string; latitude: number; longitude: number }): Promise<ApiResponse<WeatherForecast>> {
+  // Cache 30 menit per titik (2 desimal ≈ 1 km) — prakiraan tidak berubah cepat.
+  const key = `meteo:${place.latitude.toFixed(2)},${place.longitude.toFixed(2)}`;
+  return cached(key, SOURCE_TTL_SECONDS.openmeteo * 1000, () => fetchWeatherAt(place));
+}
+
+async function fetchWeatherAt(place: { name: string; admin1?: string; latitude: number; longitude: number }): Promise<ApiResponse<WeatherForecast>> {
   const url = buildForecastUrl(place);
   const fetchedAt = new Date().toISOString();
   try {
@@ -163,6 +195,10 @@ export async function searchPlaces(query: string): Promise<ApiResponse<GeoPlace[
  * Cache 1 jam — katalog tidak berubah cepat.
  */
 export async function getQuakeAnalytics(windowDays = 90): Promise<ApiResponse<QuakeAnalytics>> {
+  return cached(`usgs:analytics:${windowDays}`, SOURCE_TTL_SECONDS.usgs * 1000, () => fetchQuakeAnalytics(windowDays));
+}
+
+async function fetchQuakeAnalytics(windowDays: number): Promise<ApiResponse<QuakeAnalytics>> {
   const url = buildUsgsUrl(windowDays);
   const fetchedAt = new Date().toISOString();
   try {

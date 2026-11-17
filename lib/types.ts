@@ -56,12 +56,71 @@ export interface DatasetSummary {
   url: string;
 }
 
+/** Satu nilai facet (kategori, tahun, format file, atau instansi). */
+export interface Facet {
+  /** Nilai mentah yang dikirim balik ke portal sebagai parameter filter. */
+  value: string;
+  /** Label manusiawi untuk ditampilkan. */
+  label: string;
+  count: number;
+}
+
+/** Facet yang menyertai hasil pencarian katalog. */
+export interface CatalogFacets {
+  kategori: Facet[];
+  tahun: Facet[];
+  format: Facet[];
+  organisasi: Facet[];
+}
+
+/** Filter aktif pada pencarian katalog. */
+export interface CatalogFilters {
+  kategori?: string;
+  tahun?: string;
+  format?: string;
+  organisasi?: string;
+  tag?: string;
+}
+
 export interface CatalogResult {
   /** Jumlah "Dataset Ditemukan" yang ditampilkan portal untuk pencarian ini. */
   total: number;
   datasets: DatasetSummary[];
   /** Topik (tag) populer dari payload halaman, untuk chart + filter. */
   tagFacets: Array<{ tag: string; count: number }>;
+  /** Facet tambahan untuk menyaring hasil. */
+  facets: CatalogFacets;
+}
+
+/** Satu berkas unduhan pada halaman detail dataset. */
+export interface DatasetResource {
+  name: string;
+  format: string;
+  url: string;
+  description?: string;
+  /** Ukuran berkas dalam byte (bila dilaporkan sumber). */
+  size?: number;
+  lastModified?: string;
+  /** Status pemeriksaan tautan terakhir dari portal. */
+  ok?: boolean;
+}
+
+/** Detail satu dataset dari halaman /dataset/dataset/<slug>. */
+export interface DatasetDetail {
+  name: string;
+  title: string;
+  notes: string;
+  organization: string;
+  organizationImage?: string;
+  tags: string[];
+  /** Topik/kategori yang dilaporkan portal. */
+  kategori?: string;
+  /** Tahun prioritas dataset. */
+  prioritasTahun?: string;
+  lastModified?: string;
+  created?: string;
+  resources: DatasetResource[];
+  url: string;
 }
 
 /* --------------------------------- Lainnya -------------------------------- */

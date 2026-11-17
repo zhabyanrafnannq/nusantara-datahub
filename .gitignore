@@ -26,3 +26,6 @@ next-env.d.ts
 # editors
 .idea
 .vscode
+
+# test build output
+/tests/.build

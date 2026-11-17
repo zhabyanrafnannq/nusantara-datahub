@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
-import { Activity, BookOpen, CloudSun, Database, ExternalLink, Moon, Sun, Waves } from "lucide-react";
+import { Activity, BookOpen, Bookmark, CloudSun, Database, ExternalLink, Moon, Sun, Waves } from "lucide-react";
 import { useEffect, useState } from "react";
 import { LogoMark } from "@/components/Logo";
+import { CommandPalette } from "@/components/CommandPalette";
 
 const NAV_ITEMS = [
   { href: "/", label: "Ringkasan", icon: Activity, accent: "emerald" },
@@ -13,6 +14,7 @@ const NAV_ITEMS = [
   { href: "/cuaca", label: "Cuaca & Prakiraan", icon: CloudSun, accent: "sky" },
   { href: "/katalog", label: "Katalog Satu Data", icon: Database, accent: "teal" },
   { href: "/glosarium", label: "Glosarium Statistik", icon: BookOpen, accent: "violet" },
+  { href: "/koleksi", label: "Koleksi Saya", icon: Bookmark, accent: "amber" },
 ] as const;
 
 const ACTIVE_ACCENT: Record<(typeof NAV_ITEMS)[number]["accent"], string> = {
@@ -21,6 +23,7 @@ const ACTIVE_ACCENT: Record<(typeof NAV_ITEMS)[number]["accent"], string> = {
   sky: "from-sky-500/15 to-sky-500/5 text-sky-700 dark:text-sky-400 before:bg-sky-500",
   teal: "from-teal-500/15 to-emerald-500/5 text-teal-700 dark:text-teal-400 before:bg-teal-500",
   violet: "from-violet-500/15 to-violet-500/5 text-violet-700 dark:text-violet-400 before:bg-violet-500",
+  amber: "from-amber-500/15 to-orange-500/5 text-amber-700 dark:text-amber-400 before:bg-amber-500",
 };
 
 function ThemeToggle() {
@@ -106,7 +109,8 @@ export function Topbar() {
         </Link>
         <ThemeToggle />
       </div>
-      <div className="hidden items-center justify-end px-6 py-3 md:flex">
+      <div className="hidden items-center justify-end gap-2 px-6 py-3 md:flex">
+        <CommandPalette />
         <ThemeToggle />
       </div>
       {/* Navigasi gulir horizontal di layar sempit */}
@@ -133,5 +137,39 @@ function MobileLink({ href, label }: { href: string; label: string }) {
     >
       {label}
     </Link>
+  );
+}
+
+/**
+ * Navigasi bawah untuk layar sempit (<md): lima modul utama selalu terjangkau
+ * ibu jari tanpa harus menggulir chip di topbar.
+ */
+export function BottomNav() {
+  const pathname = usePathname();
+  const items = NAV_ITEMS.filter((item) => item.href !== "/koleksi");
+
+  return (
+    <nav
+      aria-label="Navigasi utama"
+      className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-zinc-200/80 bg-white/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl md:hidden dark:border-zinc-800/80 dark:bg-zinc-950/90"
+    >
+      {items.map((item) => {
+        const active = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
+        const Icon = item.icon;
+        return (
+          <Link
+            key={item.href}
+            href={item.href}
+            aria-current={active ? "page" : undefined}
+            className={`flex flex-col items-center gap-0.5 py-2 text-[10px] font-medium transition ${
+              active ? "text-emerald-600 dark:text-emerald-400" : "text-zinc-500 dark:text-zinc-400"
+            }`}
+          >
+            <Icon size={18} />
+            {item.label.split(" ")[0]}
+          </Link>
+        );
+      })}
+    </nav>
   );
 }
