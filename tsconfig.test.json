@@ -10,5 +10,5 @@
     "esModuleInterop": true,
     "declaration": false
   },
-  "include": ["lib/ckan.ts", "lib/cache.ts", "lib/katalog-params.ts"]
+  "include": ["lib/ckan.ts", "lib/cache.ts", "lib/katalog-params.ts", "lib/katalog-limits.ts"]
 }

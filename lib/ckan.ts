@@ -27,22 +27,30 @@ interface SdiHealth {
   retries: number;
   incompletePages: number;
   failures: number;
+  /** Berapa kali portal mengirim payload valid tapi kosong untuk kueri berisi. */
+  emptyAnomalies: number;
   lastIncompleteAt?: string;
+  lastEmptyAt?: string;
   lastError?: string;
   lastErrorAt?: string;
 }
 
-const health: SdiHealth = { requests: 0, retries: 0, incompletePages: 0, failures: 0 };
+const health: SdiHealth = { requests: 0, retries: 0, incompletePages: 0, failures: 0, emptyAnomalies: 0 };
 
 /** Potret kesehatan scraper — dipakai /api/katalog/kesehatan untuk pemantauan. */
 export function getSdiHealth(): SdiHealth & { ok: boolean; note: string } {
-  const ok = health.failures === 0 || health.incompletePages / Math.max(health.requests, 1) < 0.5;
+  const anomalyRate = health.emptyAnomalies / Math.max(health.requests, 1);
+  const ok = (health.failures === 0 || health.incompletePages / Math.max(health.requests, 1) < 0.5) && anomalyRate < 0.3;
+  const notes: string[] = [];
+  if (!ok) {
+    notes.push("Banyak halaman tanpa payload — markup portal mungkin berubah, periksa parser.");
+  } else if (anomalyRate > 0) {
+    notes.push(`${health.emptyAnomalies} kueri sempat dibalas kosong oleh portal lalu diulang.`);
+  }
   return {
     ...health,
     ok,
-    note: ok
-      ? "Scraper portal berjalan normal."
-      : "Banyak halaman tanpa payload — markup portal mungkin berubah, periksa parser.",
+    note: notes.length > 0 ? notes.join(" ") : "Scraper portal berjalan normal.",
   };
 }
 
@@ -230,9 +238,25 @@ interface RawSdiSearchResponse {
   search_facets?: Record<string, { items?: RawFacetItem[] }>;
 }
 
-/** True bila HTML memuat payload pencarian utuh (bukan cangkang SSR kosong). */
+/**
+ * True bila HTML memuat payload pencarian utuh (bukan cangkang SSR kosong).
+ *
+ * Halaman "cangkang" (~59 KB) ternyata JUGA membawa objek `{"count":0,...,"results":[]}`
+ * di flight payload-nya, jadi keberadaan `"results":[` saja tidak cukup. Tanda
+ * yang paling andal: halaman betulan merender penghitung "Dataset Ditemukan"
+ * (juga saat hasilnya memang kosong), sedangkan cangkang memakai payload
+ * `"count":0,"facets":{}` tanpa header itu.
+ */
+const SHELL_PAYLOAD_SIGNATURE = /"count"\s*:\s*0\s*,\s*"facets"\s*:\s*\{\s*\}/;
+const RESULTS_ARRAY_RE = /"results"\s*:\s*\[/;
+
 export function hasSearchPayload(html: string): boolean {
-  return /"results"\s*:\s*\[/.test(decodeNextFlightPayload(html));
+  const payload = decodeNextFlightPayload(html);
+  if (!RESULTS_ARRAY_RE.test(payload)) return false;
+  if (/Dataset Ditemukan/i.test(html)) return true;
+  // HTML tanpa header (mis. fixture yang dipangkas untuk uji): terima bila
+  // payload bukan tanda tangan cangkang.
+  return !SHELL_PAYLOAD_SIGNATURE.test(payload);
 }
 
 /** Ambil objek respons pencarian dari flight payload halaman. */
@@ -481,9 +505,12 @@ export interface SdiSearchLoad {
 /**
  * Ambil hasil pencarian katalog dari portal dengan validasi payload + cache.
  *
- * Halaman "cangkang" (tanpa payload) diulang sampai `maxAttempts` sebelum
- * menyerahkan hasil terakhir — jauh lebih baik daripada menampilkan "0 dataset"
- * untuk kueri yang sebenarnya valid.
+ * Tiga mode kegagalan portal yang ditangani di sini:
+ * 1. Halaman "cangkang" tanpa payload (SSR kosong) → ulangi.
+ * 2. Payload valid tapi `count:0` untuk kueri yang jelas berisi (gangguan
+ *    sesaat backend portal) → ulangi beberapa kali, jangan langsung percaya.
+ * 3. Hasil kosong seperti itu juga tidak boleh masuk cache, kalau tidak
+ *    pengguna melihat "0 dataset" selama 5 menit.
  */
 export async function loadSdiSearch(
   query: string,
@@ -491,54 +518,89 @@ export async function loadSdiSearch(
   filters: CatalogFilters = {},
   maxAttempts = 4,
 ): Promise<SdiSearchLoad> {
+  const trimmed = query.trim();
   const filterKey = FILTER_PARAMS.map(([key]) => (filters[key] ?? "").trim()).join("|");
-  const cacheKey = `sdi:search:${query.trim().toLowerCase()}|${page}|${filterKey}`;
+  const cacheKey = `sdi:search:${trimmed.toLowerCase()}|${page}|${filterKey}`;
 
   const hit = peekCache<SdiSearchLoad>(cacheKey);
   if (hit) return { ...hit, cached: true };
 
-  return cached(cacheKey, SEARCH_TTL_MS, async () => {
-    health.requests += 1;
-    const url = buildSdiSearchUrl(query, page, filters);
-    let last: { result: CatalogResult; complete: boolean } | null = null;
-    let lastError: unknown = null;
+  /** Hasil kosong untuk kueri yang tidak kosong dianggap mencurigakan. */
+  const isSuspiciousEmpty = (result: CatalogResult) =>
+    trimmed !== "" && result.total === 0 && result.datasets.length === 0;
 
-    for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
-      try {
-        const html = await fetchSdiHtml(url, 15_000, 2);
-        const complete = hasSearchPayload(html);
-        const result = parseSdiSearchHtml(html);
-        last = { result, complete };
-        if (complete) {
-          return { result, attempts: attempt, complete, cached: false };
+  return cached(
+    cacheKey,
+    SEARCH_TTL_MS,
+    async () => {
+      health.requests += 1;
+      const url = buildSdiSearchUrl(query, page, filters);
+      let last: { result: CatalogResult; complete: boolean } | null = null;
+      let lastError: unknown = null;
+      let emptyAnomalies = 0;
+
+      for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+        try {
+          const html = await fetchSdiHtml(url, 15_000, 2);
+          const complete = hasSearchPayload(html);
+          const result = parseSdiSearchHtml(html);
+          last = { result, complete };
+
+          if (complete && !isSuspiciousEmpty(result)) {
+            return { result, attempts: attempt, complete, cached: false };
+          }
+          if (complete) {
+            // payload utuh tapi kosong: coba sekali lagi, lalu terima apa adanya
+            emptyAnomalies += 1;
+            if (emptyAnomalies >= 2) break;
+          }
+          health.retries += 1;
+        } catch (error) {
+          lastError = error;
+          health.retries += 1;
         }
-        // cangkang tanpa payload: ulangi (maks. maxAttempts)
-        health.retries += 1;
-      } catch (error) {
-        lastError = error;
-        health.retries += 1;
       }
-    }
 
-    health.incompletePages += 1;
-    health.lastIncompleteAt = new Date().toISOString();
-    console.warn(
-      JSON.stringify({
-        event: "katalog.parser.incomplete",
-        query,
-        page,
-        filters,
-        attempts: maxAttempts,
-        datasets: last?.result.datasets.length ?? 0,
-      }),
-    );
+      if (emptyAnomalies > 0) {
+        health.emptyAnomalies += 1;
+        health.lastEmptyAt = new Date().toISOString();
+        console.warn(
+          JSON.stringify({
+            event: "katalog.parser.empty-anomaly",
+            query: trimmed,
+            page,
+            filters,
+            attempts: emptyAnomalies,
+          }),
+        );
+      }
 
-    if (last) return { result: last.result, attempts: maxAttempts, complete: last.complete, cached: false };
-    health.failures += 1;
-    health.lastError = lastError instanceof Error ? lastError.message : String(lastError);
-    health.lastErrorAt = new Date().toISOString();
-    throw lastError instanceof Error ? lastError : new Error("pencarian katalog gagal");
-  });
+      if (last && last.complete) {
+        return { result: last.result, attempts: maxAttempts, complete: true, cached: false };
+      }
+
+      health.incompletePages += 1;
+      health.lastIncompleteAt = new Date().toISOString();
+      console.warn(
+        JSON.stringify({
+          event: "katalog.parser.incomplete",
+          query: trimmed,
+          page,
+          filters,
+          attempts: maxAttempts,
+          datasets: last?.result.datasets.length ?? 0,
+        }),
+      );
+
+      if (last) return { result: last.result, attempts: maxAttempts, complete: false, cached: false };
+      health.failures += 1;
+      health.lastError = lastError instanceof Error ? lastError.message : String(lastError);
+      health.lastErrorAt = new Date().toISOString();
+      throw lastError instanceof Error ? lastError : new Error("pencarian katalog gagal");
+    },
+    // Jangan simpan hasil kosong untuk kueri yang tidak kosong.
+    (value) => !isSuspiciousEmpty(value.result),
+  );
 }
 
 /* --------------------------- Detail dataset ------------------------------- */

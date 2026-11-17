@@ -25,8 +25,9 @@ import { datasetsToCsv, exportFilename, filtersToQuery, readFilters } from "@/li
 import { loadHistory, pushHistory, rememberTags, suggestQueries } from "@/lib/katalog-history";
 import { loadSaved, subscribeSaved } from "@/lib/koleksi";
 import { SaveButton } from "@/components/SaveButton";
+import { CATALOG_MAX_PAGE, CATALOG_PAGE_SIZE, clampCatalogPage } from "@/lib/katalog-limits";
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = CATALOG_PAGE_SIZE;
 /** Halaman yang diambil saat "unduh banyak" (20 dataset/halaman). */
 const BULK_EXPORT_PAGES = 10;
 
@@ -68,15 +69,25 @@ export default function KatalogPage() {
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [suggestOpen, setSuggestOpen] = useState(false);
   const [showAllFacets, setShowAllFacets] = useState<Record<string, boolean>>({});
+  /** Isian "lompat ke halaman" (kosong = tidak sedang mengetik). */
+  const [pageJump, setPageJump] = useState("");
+  /**
+   * Pilihan facet dari kueri terakhir yang TANPA filter. Portal mengirim facet
+   * yang sudah menyempit saat filter aktif, sehingga tanpa ini pilihan lain
+   * "hilang" begitu satu filter dipakai.
+   */
+  const [facetOptions, setFacetOptions] = useState<CatalogFacets>(EMPTY_FACETS);
 
   const requestRef = useRef(0);
   const searchBoxRef = useRef<HTMLDivElement | null>(null);
+  /** Cermin ref untuk `facetOptions` supaya `load` tidak perlu jadi dependensi state ini. */
+  const facetOptionsRef = useRef<CatalogFacets>(EMPTY_FACETS);
 
   // Sinkron dari URL sekali saat halaman dibuka (deep link yang bisa dibagikan).
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const q = (params.get("q") ?? "").trim();
-    const p = Math.max(Number.parseInt(params.get("page") ?? "1", 10) || 1, 1);
+    const p = clampCatalogPage(params.get("page"));
     setQuery(q);
     setAppliedQuery(q);
     setPage(p);
@@ -114,10 +125,18 @@ export default function KatalogPage() {
       const payload = (await response.json()) as ApiResponse<CatalogResult>;
       if (requestRef.current !== requestId) return;
       setSource(payload.source);
-      setResult({
-        ...payload.data,
-        facets: payload.data.facets ?? EMPTY_FACETS,
-      });
+      const incomingFacets = payload.data.facets ?? EMPTY_FACETS;
+      setResult({ ...payload.data, facets: incomingFacets });
+      // Simpan pilihan facet dari kueri tanpa filter (atau saat belum ada pilihan).
+      const noFilters = Object.keys(activeFilters).length === 0;
+      const isEmpty = facetOptionsRef.current.kategori.length === 0 &&
+        facetOptionsRef.current.organisasi.length === 0 &&
+        facetOptionsRef.current.tahun.length === 0 &&
+        facetOptionsRef.current.format.length === 0;
+      if (noFilters || isEmpty) {
+        facetOptionsRef.current = incomingFacets;
+        setFacetOptions(incomingFacets);
+      }
       if (q.trim()) {
         pushHistory(q);
         rememberTags(payload.data.tagFacets.map((facet) => facet.tag));
@@ -181,7 +200,7 @@ export default function KatalogPage() {
     setPage(1);
   }
 
-  const estimatedPages = Math.max(Math.ceil(result.total / PAGE_SIZE), 1);
+  const estimatedPages = Math.min(Math.max(Math.ceil(result.total / PAGE_SIZE), 1), CATALOG_MAX_PAGE);
   const activeTopic = useMemo(
     () => POPULAR_TOPICS.find((topic) => topic.query.toLowerCase() === appliedQuery.toLowerCase()),
     [appliedQuery],
@@ -351,7 +370,7 @@ export default function KatalogPage() {
       </Card>
 
       {/* ---------------- Filter facet ---------------- */}
-      {!loading && (result.facets.kategori.length > 0 || result.facets.tahun.length > 0 || result.facets.format.length > 0 || result.facets.organisasi.length > 0) ? (
+      {!loading && (facetOptions.kategori.length > 0 || facetOptions.tahun.length > 0 || facetOptions.format.length > 0 || facetOptions.organisasi.length > 0) ? (
         <Card>
           <CardHeader
             title="Saring hasil"
@@ -376,7 +395,7 @@ export default function KatalogPage() {
             <FacetRow
               label="Kategori"
               icon={Tag}
-              facets={result.facets.kategori}
+              facets={facetOptions.kategori}
               activeValue={filters.kategori}
               expanded={Boolean(showAllFacets.kategori)}
               onToggleExpand={() => setShowAllFacets((prev) => ({ ...prev, kategori: !prev.kategori }))}
@@ -385,7 +404,7 @@ export default function KatalogPage() {
             <FacetRow
               label="Tahun"
               icon={CalendarDays}
-              facets={result.facets.tahun}
+              facets={facetOptions.tahun}
               activeValue={filters.tahun}
               expanded={Boolean(showAllFacets.tahun)}
               onToggleExpand={() => setShowAllFacets((prev) => ({ ...prev, tahun: !prev.tahun }))}
@@ -394,7 +413,7 @@ export default function KatalogPage() {
             <FacetRow
               label="Format"
               icon={FileSpreadsheet}
-              facets={result.facets.format}
+              facets={facetOptions.format}
               activeValue={filters.format}
               expanded={Boolean(showAllFacets.format)}
               onToggleExpand={() => setShowAllFacets((prev) => ({ ...prev, format: !prev.format }))}
@@ -403,7 +422,7 @@ export default function KatalogPage() {
             <FacetRow
               label="Instansi"
               icon={Database}
-              facets={result.facets.organisasi}
+              facets={facetOptions.organisasi}
               activeValue={filters.organisasi}
               expanded={Boolean(showAllFacets.organisasi)}
               onToggleExpand={() => setShowAllFacets((prev) => ({ ...prev, organisasi: !prev.organisasi }))}
@@ -628,7 +647,7 @@ export default function KatalogPage() {
         ) : null}
 
         {!loading && result.datasets.length > 0 ? (
-          <div className="flex items-center justify-between border-t border-zinc-100 px-5 py-3 text-sm dark:border-zinc-800">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-zinc-100 px-5 py-3 text-sm dark:border-zinc-800">
             <button
               type="button"
               onClick={() => setPage((p) => Math.max(p - 1, 1))}
@@ -637,17 +656,63 @@ export default function KatalogPage() {
             >
               ← Sebelumnya
             </button>
-            <span className="text-xs text-zinc-500 dark:text-zinc-400">
-              halaman {page} dari ±{estimatedPages.toLocaleString("id-ID")}
-            </span>
+            <div className="flex items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400">
+              <span aria-live="polite" aria-atomic="true">
+                halaman {page} dari ±{estimatedPages.toLocaleString("id-ID")}
+              </span>
+              {estimatedPages > 3 ? (
+                <form
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    const target = Number.parseInt(pageJump, 10);
+                    if (!Number.isFinite(target)) return;
+                    setPage(Math.min(Math.max(target, 1), estimatedPages));
+                    setPageJump("");
+                  }}
+                  className="flex items-center gap-1"
+                >
+                  <label htmlFor="lompat-halaman" className="sr-only">
+                    Lompat ke halaman
+                  </label>
+                  <input
+                    id="lompat-halaman"
+                    type="number"
+                    min={1}
+                    max={estimatedPages}
+                    inputMode="numeric"
+                    value={pageJump}
+                    onChange={(event) => setPageJump(event.target.value)}
+                    placeholder="ke-…"
+                    className="w-16 rounded-md border border-zinc-200 bg-white px-2 py-1 text-[11px] tabular-nums outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-zinc-700 dark:bg-zinc-900"
+                  />
+                  <button
+                    type="submit"
+                    className="rounded-md border border-zinc-200 px-2 py-1 text-[11px] font-medium text-zinc-600 transition hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                  >
+                    Lompat
+                  </button>
+                </form>
+              ) : null}
+            </div>
             <button
               type="button"
-              onClick={() => setPage((p) => p + 1)}
+              onClick={() => setPage((p) => Math.min(p + 1, estimatedPages))}
               disabled={loading || page >= estimatedPages}
               className="rounded-lg border border-zinc-200 px-3 py-1.5 text-xs font-medium transition hover:bg-zinc-100 disabled:opacity-40 dark:border-zinc-700 dark:hover:bg-zinc-800"
             >
               Berikutnya →
             </button>
+          </div>
+        ) : null}
+
+        {!loading && result.datasets.length === 0 && result.total > 0 && page > 1 ? (
+          <div className="border-t border-zinc-100 px-5 py-4 text-xs text-zinc-500 dark:border-zinc-800 dark:text-zinc-400">
+            Halaman {page} kosong walau total {formatNumber(result.total)} dataset. Portal kadang membalas halaman dalam
+            tanpa isi —{" "}
+            <button type="button" onClick={() => setPage(1)} className="font-medium text-emerald-700 hover:underline dark:text-emerald-400">
+              kembali ke halaman 1
+            </button>{" "}
+            atau persempit kueri.
           </div>
         ) : null}
       </Card>

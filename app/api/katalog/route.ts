@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { searchCatalog } from "@/lib/sources";
 import { readFilters } from "@/lib/katalog-params";
+import { clampCatalogPage } from "@/lib/katalog-limits";
 
 export async function GET(request: NextRequest) {
   const params = request.nextUrl.searchParams;
-  const page = Math.min(Math.max(Number.parseInt(params.get("page") ?? "1", 10) || 1, 1), 200);
+  const page = clampCatalogPage(params.get("page"));
   const q = params.get("q")?.trim() || "";
   const filters = readFilters(params);
 

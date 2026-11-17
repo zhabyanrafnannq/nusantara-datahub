@@ -144,3 +144,46 @@ test("CSV memuat header, BOM, dan escape tanda kutip", () => {
   assert.ok(csv.includes('"Judul ""khusus"""'));
   assert.ok(csv.includes("\r\n"));
 });
+
+test("clampCatalogPage menjepit nomor halaman ke rentang yang dilayani API", () => {
+  const { clampCatalogPage, CATALOG_MAX_PAGE, CATALOG_PAGE_SIZE } = require("./.build/katalog-limits.js");
+  assert.equal(CATALOG_PAGE_SIZE, 20);
+  assert.equal(clampCatalogPage("1"), 1);
+  assert.equal(clampCatalogPage("42"), 42);
+  assert.equal(clampCatalogPage("0"), 1, "halaman 0 tidak sah");
+  assert.equal(clampCatalogPage("-7"), 1);
+  assert.equal(clampCatalogPage("99999"), CATALOG_MAX_PAGE);
+  assert.equal(clampCatalogPage("abc"), 1);
+  assert.equal(clampCatalogPage(null), 1);
+  assert.equal(clampCatalogPage(3.9), 3);
+});
+
+test("cached menolak menyimpan hasil yang ditandai tidak layak cache", async () => {
+  clearCache();
+  let calls = 0;
+  const loader = async () => {
+    calls += 1;
+    return { total: calls === 1 ? 0 : 12 };
+  };
+
+  const first = await cached("kunci-kosong", 5000, loader, (value) => value.total > 0);
+  assert.equal(first.total, 0);
+  assert.equal(cacheStats().entries, 0, "hasil kosong tidak boleh masuk cache");
+
+  const second = await cached("kunci-kosong", 5000, loader, (value) => value.total > 0);
+  assert.equal(second.total, 12, "permintaan berikutnya harus memanggil loader lagi");
+  assert.equal(cacheStats().entries, 1);
+});
+
+test("cangkang ber-payload kosong tidak dianggap halaman lengkap", () => {
+  // Cangkang (~59 KB) membawa {"count":0,...,"results":[]} di flight payload,
+  // jadi penanda "results":[" saja tidak cukup — harus ada header "Dataset Ditemukan".
+  const shell = fixture("sdi-search-shell.html");
+  assert.ok(
+    decodeNextFlightPayload(shell).includes('"results":[]'),
+    "fixture harus memuat payload kosong seperti cangkang asli",
+  );
+  assert.equal(hasSearchPayload(shell), false, "cangkang tidak boleh lolos validasi");
+  assert.equal(hasSearchPayload(searchHtml), true, "halaman penuh harus lolos validasi");
+  assert.equal(parseSdiSearchHtml(shell).total, 0);
+});

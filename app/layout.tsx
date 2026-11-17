@@ -51,7 +51,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <div className="flex min-h-screen w-full flex-col md:pl-64">
               <Topbar />
               <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 pb-24 md:px-8 md:pb-6">{children}</main>
-              <footer className="px-4 py-6 text-center text-xs text-zinc-500 md:px-8 dark:text-zinc-400">
+              {/* pb-20 di mobile: beri ruang untuk BottomNav (52 px + safe-area). */}
+              <footer className="px-4 pb-20 pt-6 text-center text-xs text-zinc-500 md:px-8 md:pb-6 dark:text-zinc-400">
                 Nusantara DataHub — open source (MIT). Data © <a className="underline decoration-dotted" href="https://www.bmkg.go.id" target="_blank" rel="noreferrer">BMKG</a>,{" "}
                 <a className="underline decoration-dotted" href="https://data.go.id" target="_blank" rel="noreferrer">Satu Data Indonesia</a>,{" "}
                 <a className="underline decoration-dotted" href="https://earthquake.usgs.gov" target="_blank" rel="noreferrer">USGS</a>, dan{" "}

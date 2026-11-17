@@ -48,8 +48,17 @@ export function peekCache<T>(key: string): T | undefined {
 /**
  * Jalankan `loader` sekali per `key` selama `ttlMs`, dan satukan permintaan
  * paralel untuk kunci yang sama.
+ *
+ * `shouldCache` (opsional) dipakai untuk menolak menyimpan hasil yang mencurigakan
+ * — mis. portal membalas "0 dataset" karena gangguan sesaat. Permintaan paralel
+ * tetap disatukan, tapi hasilnya tidak menempel di cache sampai TTL habis.
  */
-export async function cached<T>(key: string, ttlMs: number, loader: () => Promise<T>): Promise<T> {
+export async function cached<T>(
+  key: string,
+  ttlMs: number,
+  loader: () => Promise<T>,
+  shouldCache?: (value: T) => boolean,
+): Promise<T> {
   const hit = peekCache<T>(key);
   if (hit !== undefined) return hit;
 
@@ -59,8 +68,10 @@ export async function cached<T>(key: string, ttlMs: number, loader: () => Promis
   const promise = (async () => {
     try {
       const value = await loader();
-      store.set(key, { value, expiresAt: Date.now() + ttlMs });
-      sweep();
+      if (!shouldCache || shouldCache(value)) {
+        store.set(key, { value, expiresAt: Date.now() + ttlMs });
+        sweep();
+      }
       return value;
     } finally {
       inflight.delete(key);
