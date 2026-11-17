@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     template: "%s · Nusantara DataHub",
   },
   description:
-    "Dashboard terpadu data publik Indonesia: gempa bumi BMKG, katalog Satu Data Indonesia, dan prakiraan cuaca dalam satu aplikasi open source.",
+    "Dashboard terpadu data publik Indonesia: gempa bumi BMKG, katalog dataset Satu Data Indonesia dengan filter facet, prakiraan cuaca, glosarium statistik, dan koleksi dataset — open source.",
   applicationName: "Nusantara DataHub",
   manifest: "/manifest.webmanifest",
   openGraph: {
@@ -28,7 +28,7 @@ export const metadata: Metadata = {
     siteName: "Nusantara DataHub",
     title: "Nusantara DataHub — Dashboard Data Publik Indonesia",
     description:
-      "Gempa bumi BMKG, katalog dataset Satu Data Indonesia, prakiraan cuaca, dan glosarium statistik dalam satu dashboard open source.",
+      "Gempa bumi BMKG, katalog dataset Satu Data Indonesia (filter facet + halaman detail), prakiraan cuaca, glosarium statistik, dan koleksi dataset dalam satu dashboard open source.",
   },
   twitter: { card: "summary_large_image" },
 };
