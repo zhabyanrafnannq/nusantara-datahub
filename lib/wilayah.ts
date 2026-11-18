@@ -85,9 +85,10 @@ export function searchWilayah(rawQuery: string, limit = 6): GeoPlace[] {
 
   return hits.map(({ entry }) => ({
     id: entry.id,
+    // Nama sudah lengkap ("Kabupaten Demak"), jadi admin2 dikosongkan agar UI
+    // tidak menampilkan "Kabupaten Demak — Kabupaten · Jawa Tengah".
     name: entry.nama,
     admin1: entry.provinsi,
-    admin2: entry.tipe === "kota" ? "Kota" : "Kabupaten",
     latitude: entry.latitude,
     longitude: entry.longitude,
     timezone: "Asia/Jakarta",
