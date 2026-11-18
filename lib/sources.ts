@@ -13,6 +13,7 @@ import { normalizeBmkgEnvelope } from "./bmkg";
 import { loadSdiDataset, loadSdiSearch, parseSdiSearchHtml } from "./ckan";
 import { cached } from "./cache";
 import { buildForecastUrl, buildGeocodeUrl, findCity, normalizeGeocode, normalizeOpenMeteo } from "./weather";
+import { searchWilayah } from "./wilayah";
 import { buildUsgsUrl, computeQuakeAnalytics, parseUsgsCsv } from "./usgs";
 
 /** Timeout permintaan upstream sebelum jatuh ke data contoh. */
@@ -154,15 +155,26 @@ export async function getWeather(cityId = "jakarta"): Promise<ApiResponse<Weathe
 }
 
 /**
- * Pencarian tempat via geocoder Open-Meteo — mencakup seluruh kabupaten/kota
- * di Indonesia (respons bahasa Indonesia). Hasil geocoding stabil, cache 1 hari.
+ * Pencarian tempat untuk modul cuaca.
+ *
+ * Strategi dua lapis:
+ * 1. **Direktori lokal** (514 kabupaten/kota, `lib/wilayah.ts`) — selalu tersedia,
+ *    instan, dan tidak bergantung pada pihak ketiga. Inilah yang membuat
+ *    pencarian "demak" atau "sukabumi" tetap jalan walau geocoder diblokir/down
+ *    (kasus yang terjadi di serverless).
+ * 2. **Geocoder Open-Meteo** — menambah nama populer/kecamatan dan hasil lintas
+ *    negara; digabung setelah hasil lokal, di-dedupe.
  */
 export async function searchPlaces(query: string): Promise<ApiResponse<GeoPlace[]>> {
-  const url = buildGeocodeUrl(query);
+  const trimmed = query.trim();
   const fetchedAt = new Date().toISOString();
+  const local = searchWilayah(trimmed, 6);
+
+  const url = buildGeocodeUrl(trimmed);
+  let remote: GeoPlace[] = [];
+  let lastError: unknown = new Error("geocoder gagal");
 
   // Dua percobaan — geocoder kadang lambat/terputus sesaat.
-  let lastError: unknown = new Error("geocoder gagal");
   for (let attempt = 1; attempt <= 2; attempt += 1) {
     try {
       const response = await fetch(url, {
@@ -174,18 +186,55 @@ export async function searchPlaces(query: string): Promise<ApiResponse<GeoPlace[
         throw new Error(`Geocoder membalas HTTP ${response.status}`);
       }
       const payload = (await response.json()) as unknown;
-      return { source: "live", fetchedAt, data: normalizeGeocode(payload) };
+      remote = normalizeGeocode(payload);
+      lastError = null;
+      break;
     } catch (error) {
       lastError = error;
     }
   }
 
-  // PENTING: kegagalan geocoding TIDAK memakai fixture — mengembalikan hasil
-  // palsu (mis. daftar Sukabumi untuk kueri "demak") lebih berbahaya daripada
-  // hasil kosong. UI sudah menampilkan pesan "tidak ada tempat cocok".
+  const merged = mergePlaces(local, remote, 8);
+  if (merged.length > 0) {
+    if (lastError) {
+      const reason = lastError instanceof Error ? lastError.message : "alasan tidak diketahui";
+      console.warn(`[sources] geocoder gagal untuk "${trimmed}", memakai direktori wilayah lokal: ${reason}`);
+    }
+    return { source: remote.length > 0 ? "live" : "fixture", fetchedAt, data: merged };
+  }
+
+  // Kosong dari keduanya: jangan mengarang hasil (daftar wilayah orang lain
+  // untuk kueri ini lebih berbahaya daripada hasil kosong). UI menampilkan
+  // pesan "tidak ada tempat cocok".
   const reason = lastError instanceof Error ? lastError.message : "alasan tidak diketahui";
-  console.warn(`[sources] geocoder gagal untuk "${query}", kembalikan kosong: ${reason}`);
+  if (lastError) console.warn(`[sources] geocoder gagal untuk "${trimmed}", kembalikan kosong: ${reason}`);
   return { source: "fixture", fetchedAt, data: [] };
+}
+
+/** Normalisasi nama tempat untuk deteksi duplikat antar sumber. */
+function placeKey(place: GeoPlace): string {
+  return `${place.name} ${place.admin1 ?? ""}`
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+/** Gabungkan hasil lokal dan geocoder tanpa duplikat; hasil lokal di depan. */
+function mergePlaces(local: GeoPlace[], remote: GeoPlace[], limit: number): GeoPlace[] {
+  const seen = new Set<string>();
+  const merged: GeoPlace[] = [];
+  for (const place of [...local, ...remote]) {
+    // Buang prefiks "kota "/"kabupaten " saat membandingkan agar
+    // "Kota Sukabumi" (geocoder) dan "Kota Sukabumi" (direktori) tidak dobel.
+    const key = placeKey(place).replace(/^(kota|kabupaten) /, "");
+    if (seen.has(key)) continue;
+    seen.add(key);
+    merged.push(place);
+    if (merged.length >= limit) break;
+  }
+  return merged;
 }
 
 /* ---------------------------- Analitik gempa -------------------------------- */

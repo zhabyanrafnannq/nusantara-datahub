@@ -42,7 +42,9 @@ export async function GET(request: NextRequest) {
       "Content-Disposition": `attachment; filename="${exportFilename(q, `-${fetchedPages}halaman`)}"`,
       "X-Total-Datasets": String(total),
       "X-Exported-Datasets": String(collected.size),
+      // Berkas ini dibangun per permintaan: jangan pernah di-cache CDN.
       "Cache-Control": "no-store",
+      "Netlify-Vary": "query=q|kategori|tahun|format|organisasi|tag|pages",
     },
   });
 }

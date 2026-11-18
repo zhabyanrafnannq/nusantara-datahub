@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getWeather, getWeatherAt } from "@/lib/sources";
+import { dynamicApiHeaders } from "@/lib/api-cache";
 
 export async function GET(request: NextRequest) {
   const params = request.nextUrl.searchParams;
@@ -25,8 +26,12 @@ export async function GET(request: NextRequest) {
     response = fallback;
   }
 
-  // Fallback fixture tidak di-cache agar percobaan berikutnya menyentuh upstream lagi.
-  const cacheControl =
-    response.source === "live" ? "public, s-maxage=1800, stale-while-revalidate=3600" : "no-store";
-  return NextResponse.json(response, { headers: { "Cache-Control": cacheControl } });
+  // Koordinat & nama WAJIB masuk cache key: tanpa itu pencarian kota lain akan
+  // menerima prakiraan kota pertama yang ter-cache (bug CDN Netlify).
+  const headers = dynamicApiHeaders({
+    vary: ["lat", "lon", "name", "admin1", "city"],
+    ttlSeconds: 1800,
+    cacheable: response.source === "live",
+  });
+  return NextResponse.json(response, { headers });
 }

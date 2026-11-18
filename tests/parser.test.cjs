@@ -187,3 +187,42 @@ test("cangkang ber-payload kosong tidak dianggap halaman lengkap", () => {
   assert.equal(hasSearchPayload(searchHtml), true, "halaman penuh harus lolos validasi");
   assert.equal(parseSdiSearchHtml(shell).total, 0);
 });
+
+test("direktori wilayah lokal menemukan kabupaten/kota tanpa jaringan", () => {
+  const { searchWilayah, WILAYAH_COUNT } = require("./.build/wilayah.js");
+  assert.equal(WILAYAH_COUNT, 514, "direktori harus memuat 514 kabupaten/kota");
+
+  const demak = searchWilayah("demak");
+  assert.equal(demak[0]?.name, "Kabupaten Demak");
+  assert.equal(demak[0]?.admin1, "Jawa Tengah");
+  assert.ok(demak[0]?.latitude < 0 && demak[0]?.longitude > 100, "koordinat harus masuk akal");
+
+  const sukabumi = searchWilayah("sukabumi").map((p) => p.name);
+  assert.ok(sukabumi.includes("Kabupaten Sukabumi"), "kabupaten harus ketemu");
+  assert.ok(sukabumi.includes("Kota Sukabumi"), "kota harus ketemu");
+
+  assert.equal(searchWilayah("kota bandung")[0]?.name, "Kota Bandung", "prefiks 'kota' memprioritaskan kota");
+  assert.equal(searchWilayah("kabupaten bandung")[0]?.name, "Kabupaten Bandung");
+  assert.deepEqual(searchWilayah("zzzz"), [], "kueri tak dikenal tidak boleh mengarang hasil");
+  assert.deepEqual(searchWilayah("d"), [], "kueri <2 huruf diabaikan");
+
+  const byProvince = searchWilayah("jawa tengah").map((p) => p.admin1);
+  assert.ok(byProvince.length > 0 && byProvince.every((prov) => prov === "Jawa Tengah"), "bisa dicari lewat provinsi");
+});
+
+test("header API memaksa cache key ikut parameter query (bug CDN Netlify)", () => {
+  const { dynamicApiHeaders } = require("./.build/api-cache.js");
+
+  const cached = dynamicApiHeaders({ vary: ["q", "page"], ttlSeconds: 300 });
+  assert.equal(cached["Netlify-Vary"], "query=q|page", "parameter query wajib masuk cache key");
+  assert.match(cached["Netlify-CDN-Cache-Control"], /s-maxage=300/);
+  assert.equal(cached["Cache-Control"], "public, max-age=0, must-revalidate", "browser selalu revalidasi");
+
+  const noStore = dynamicApiHeaders({ vary: ["q"], ttlSeconds: 300, cacheable: false });
+  assert.equal(noStore["Cache-Control"], "no-store");
+  assert.equal(noStore["Netlify-CDN-Cache-Control"], "no-store");
+  assert.equal(noStore["Netlify-Vary"], "query=q", "Netlify-Vary harus konsisten untuk URL yang sama");
+
+  const zeroTtl = dynamicApiHeaders({ vary: ["q"], ttlSeconds: 0 });
+  assert.equal(zeroTtl["Cache-Control"], "no-store");
+});
